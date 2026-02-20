@@ -163,11 +163,13 @@ const updateProfile = async (req, res) => {
       if (!updatedUser) {
         return res.status(500).json({
           message: "Error while updating user profile",
+          user: updatedUser,
         });
       }
 
       return res.json({
         message: "User profile updated successfully",
+        user: updatedUser,
       });
     } else if (fullName) {
       const updatedUser = await UserModel.findByIdAndUpdate(
@@ -184,6 +186,7 @@ const updateProfile = async (req, res) => {
 
       return res.json({
         message: "User profile updated successfully",
+        user: updatedUser,
       });
     } else if (profilePic) {
       const uploadResponse = await cloudinary.uploader.upload(profilePic);

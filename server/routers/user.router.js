@@ -7,5 +7,5 @@ router.post("/register", userController.register);
 router.post("/login", userController.login);
 router.post("/logout", userController.logOut);
 router.put("/update-profile", protectedRoute, userController.updateProfile);
-router.get("/check-auth", protectedRoute, userController.checkAuth);
+router.get("/check", protectedRoute, userController.checkAuth);
 module.exports = router;
