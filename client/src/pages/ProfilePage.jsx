@@ -1,97 +1,160 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { User, Mail, Camera } from "lucide-react";
+import { useAuthStore } from "../store/useAuthStore";
+import { toast } from "react-hot-toast";
 
 const ProfilePage = () => {
+  const { updateProfile, isUpdatingProfile, authUser } = useAuthStore();
+
+  const [formData, setFormData] = useState({
+    fullName: "",
+    profilePic: "",
+  });
+
+  useEffect(() => {
+    if (authUser) {
+      setFormData({
+        fullName: authUser.fullName || "",
+        profilePic: authUser.profilePic || "",
+      });
+    }
+  }, [authUser]);
+
+  const handleChange = (e) => {
+    setFormData((prev) => ({
+      ...prev,
+      fullName: e.target.value,
+    }));
+  };
+
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+
+    reader.onloadend = () => {
+      setFormData((prev) => ({
+        ...prev,
+        profilePic: reader.result,
+      }));
+    };
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      const updatedUser = await updateProfile(formData);
+
+      toast.success("Profile updated successfully");
+
+      // sync รูปใหม่จาก backend (สำคัญ)
+      setFormData({
+        fullName: updatedUser.fullName,
+        profilePic: updatedUser.profilePic,
+      });
+    } catch (error) {
+      toast.error(error || "Failed to update profile");
+    }
+  };
+
   return (
-    // ปรับ Padding และ Margin ด้านบนให้เหมาะสมกับแต่ละขนาดหน้าจอ
-    <div className="min-h-[calc(100vh-64px)] bg-slate-50 dark:bg-transparent text-slate-800 dark:text-slate-300 p-4 sm:p-6 md:p-8 flex justify-center items-start pt-8 sm:pt-12 md:pt-20 transition-colors duration-300">
-      
-      {/* การ์ด Profile: จำกัดความกว้างไม่ให้ล้นในมือถือ และไม่กว้างเกินไปในจอใหญ่ */}
-      <div className="w-full max-w-md md:max-w-lg lg:max-w-xl bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-2xl md:rounded-3xl p-5 sm:p-8 md:p-10 shadow-sm fade-in">
-        
-        {/* =========================================
-            ส่วนบน: Header & Avatar
-            ========================================= */}
-        <div className="flex flex-col items-center mb-6 md:mb-8 text-center">
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white mb-1">
-            Profile
-          </h1>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mb-6 sm:mb-8">
+    <div className="min-h-[calc(100vh-64px)] flex justify-center items-start pt-16 p-4">
+      <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl p-8 shadow-sm">
+        {/* HEADER */}
+        <div className="flex flex-col items-center mb-8">
+          <h1 className="text-2xl font-bold mb-2 text-black">Profile</h1>
+          <p className="text-sm text-slate-500 text-black">
             Your profile information
           </p>
 
-          {/* รูปโปรไฟล์ */}
-          <div className="flex flex-col items-center">
-            <div className="relative mb-3 sm:mb-4">
-              {/* ขนาดรูปโปรไฟล์ ปรับตามหน้าจอ */}
-              <div className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-full bg-slate-100 dark:bg-slate-800 border-4 border-slate-50 dark:border-slate-700 flex items-center justify-center overflow-hidden shadow-sm">
-                <User size={40} className="sm:w-12 sm:h-12 md:w-14 md:h-14 text-slate-400 dark:text-slate-500" />
-              </div>
-              
-              {/* ปุ่มเปลี่ยนรูป (Camera) */}
-              <button className="absolute bottom-0 right-0 bg-slate-800 dark:bg-slate-700 hover:bg-slate-700 dark:hover:bg-slate-600 p-1.5 sm:p-2 md:p-2.5 rounded-full text-white transition-colors shadow-md border-2 border-white dark:border-slate-900">
-                <Camera size={14} className="sm:w-4 sm:h-4 md:w-5 md:h-5" />
-              </button>
+          {/* PROFILE IMAGE */}
+          <div className="relative mt-6">
+            <div className="w-28 h-28 rounded-full overflow-hidden text-black border-4 border-slate-200">
+              {formData.profilePic ? (
+                <img
+                  src={formData.profilePic}
+                  alt="Profile"
+                  className="w-full h-full object-cover text-black"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-slate-100">
+                  <User className="w-12 h-12 text-slate-400" />
+                </div>
+              )}
             </div>
-            <p className="text-[10px] sm:text-[11px] md:text-xs text-slate-500 dark:text-slate-400">
-              Click the camera icon to update your photo
-            </p>
+
+            {/* hidden file input */}
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageUpload}
+              id="avatarUpload"
+              className="hidden "
+            />
+
+            <label
+              htmlFor="avatarUpload"
+              className="absolute bottom-0 right-0 bg-slate-800 hover:bg-slate-700 p-2 rounded-full cursor-pointer text-white"
+            >
+              <Camera size={16} />
+            </label>
           </div>
         </div>
 
-        {/* =========================================
-            ส่วนกลาง: Form Fields
-            ========================================= */}
-        <div className="space-y-4 sm:space-y-5 mb-8 md:mb-10">
-          {/* ชื่อ (Full Name) */}
+        {/* FORM */}
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="flex items-center gap-2 text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5 sm:mb-2">
-              <User size={14} className="sm:w-4 sm:h-4" /> Full Name
+            <label className="flex items-center gap-2 text-sm font-medium mb-2 text-black">
+              <User size={16} /> Full Name
             </label>
             <input
               type="text"
-              defaultValue="John"
-              readOnly
-              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg sm:rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-600 transition-colors"
+              value={formData.fullName}
+              onChange={handleChange}
+              className="w-full border rounded-xl px-4 py-3 text-sm text-black"
             />
           </div>
 
-          {/* อีเมล (Email Address) */}
           <div>
-            <label className="flex items-center gap-2 text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5 sm:mb-2">
-              <Mail size={14} className="sm:w-4 sm:h-4" /> Email Address
+            <label className="flex items-center gap-2 text-sm font-medium mb-2 text-black">
+              <Mail size={16} /> Email Address
             </label>
             <input
               type="email"
-              defaultValue="john@mail.com"
+              value={authUser?.email || ""}
               readOnly
-              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg sm:rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-600 transition-colors"
+              className="w-full border rounded-xl px-4 py-3 text-sm bg-gray-100 text-black"
             />
           </div>
-        </div>
 
-        {/* =========================================
-            ส่วนล่าง: Account Information
-            ========================================= */}
-        <div>
-          <h2 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white mb-2 sm:mb-4">
+          <button
+            type="submit"
+            disabled={isUpdatingProfile}
+            className="w-full bg-black text-white py-3 rounded-xl disabled:opacity-50"
+          >
+            {isUpdatingProfile ? "Updating..." : "Update Profile"}
+          </button>
+        </form>
+
+        {/* ACCOUNT INFO */}
+        <div className="mt-8">
+          <h2 className="text-sm font-bold mb-4 text-black">
             Account Information
           </h2>
-          <div className="flex flex-col text-xs sm:text-sm">
-            {/* วันที่สมัคร */}
-            <div className="flex justify-between items-center py-2.5 sm:py-3 border-b border-slate-100 dark:border-slate-800/80">
-              <span className="text-slate-500 dark:text-slate-400">Member Since</span>
-              <span className="text-slate-800 dark:text-slate-200 font-medium">2025-03-11</span>
-            </div>
-            
-            {/* สถานะบัญชี */}
-            <div className="flex justify-between items-center py-2.5 sm:py-3">
-              <span className="text-slate-500 dark:text-slate-400">Account Status</span>
-              <span className="text-emerald-500 font-medium">Active</span>
-            </div>
+
+          <div className="flex justify-between py-2 border-b">
+            <span className="text-slate-500">Member Since</span>
+            <span>{authUser?.createdAt?.slice(0, 10)}</span>
+          </div>
+
+          <div className="flex justify-between py-2">
+            <span className="text-slate-500 text-black">Account Status</span>
+            <span className="text-emerald-500 font-medium">Active</span>
           </div>
         </div>
-
       </div>
     </div>
   );

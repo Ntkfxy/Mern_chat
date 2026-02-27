@@ -1,20 +1,20 @@
 //commaonts to explain what this file is about
-const express = require("express");
 const dotenv = require("dotenv");
 dotenv.config();
 const mongoose = require("mongoose");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
-
+const express = require("express");
 const DB_URL = process.env.DB_URL;
 const CLIENT_URL = process.env.CLIENT_URL;
 
 //import router
 const UserRouter = require("./routers/user.router");
+const MessageRouter = require("./routers/message.router");
 // const PostRouter = require("./routers/post.router");
 
-const app = express();
 const PORT = process.env.PORT;
+const { server, app } = require("./lib/socket");
 
 //middleware หน้าที่เป็นตัวกลาง
 //แปลงข้อมูลที่รับมาให้อยู่ในรูปเเบบ json
@@ -56,14 +56,11 @@ if (!DB_URL) {
     });
 }
 
-//configure port and listen port
-//ทำหน้าที่เป็น call back functions
-app.listen(PORT, () => {
+//ต้องการให้รับ app ทั้ง 2 ทาง
+server.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
 
 //Router
 app.use("/api/v1/user", UserRouter);
-console.log("🔥 BEFORE POST ROUTER");
-// app.use("/api/v1/post", PostRouter);
-// console.log("🔥 AFTER POST ROUTER");
+app.use("/api/v1/message", MessageRouter);

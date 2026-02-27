@@ -1,38 +1,81 @@
-const MessageModel = require("../models/Message");
+const Message = require("../models/Messege");
+const User = require("../models/User");
+const cloudinary = require("../configs/cloudinary");
 require("dotenv").config();
 
-const createMessage = async (req, res) => {
+const getUserForSidebar = async (req, res) => {
   try {
-    const { text, file, sender, recipient } = req.body;
-    const message = new MessageModel({
+    const loggedUserId = req.user._id;
+    const filteredUsers = await User.find({
+      _id: { $ne: loggedUserId },
+    }).selected("-password");
+    res.status(200).json(filteredUsers);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Internal Server Error While getting users info" });
+  }
+};
+
+const sendMessage = async (req, res) => {
+  try {
+    const { id: recipientId } = req.params;
+    if (!recipientId) {
+      return res.status(400).json({ message: "Recipient id is required" });
+    }
+
+    const senderId = req.user._id;
+    const { text, file } = req.body;
+    // if(text === "" && file ==="" ){
+    //     return res.status(400).json({message: "Message is empty"});
+    // }
+    let fileUrl = "";
+    if (file) {
+      const uploadResponse = await cloudinary.uploader.upload(file);
+      fileUrl = uploadResponse.secure_url;
+    }
+    const newMessage = new Message({
+      senderId,
+      recipientId,
       text,
-      file,
-      sender,
-      recipient,
+      file: fileUrl,
     });
-    await message.save();
-    res.status(201).json(message);
+    await newMessage.save();
+    res.json(newMessage);
   } catch (error) {
-    res.status(500).json({ error: "Failed to create message" });
+    res
+      .status(500)
+      .json({ message: "Internal Server Error While sending message" });
   }
 };
-
-const getMessages = async (req, res) => {
+const getMessage = async (req, res) => {
   try {
-    const { sender, recipient } = req.query;
-    const messages = await MessageModel.find({
+    const myId = req.user._id;
+    const { id: userToChat } = req.params;
+    const message = await Message.find({
       $or: [
-        { sender, recipient },
-        { sender: recipient, recipient: sender },
+        {
+          senderId: myId,
+          recipientId: userToChat,
+        },
+        {
+          senderId: userToChat,
+          recipientId: myId,
+        },
       ],
-    }).sort({ createdAt: 1 });
-    res.status(200).json(messages);
+    });
+    res.json(message);
   } catch (error) {
-    res.status(500).json({ error: "Failed to retrieve messages" });
+    return res
+      .status(500)
+      .json({ message: "Internal Server Error While getting message" });
   }
 };
 
-module.exports = {
-  createMessage,
-  getMessages,
+const messageController = {
+  getUserForSidebar,
+  sendMessage,
+  getMessage,
 };
+
+module.exports = messageController;

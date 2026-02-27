@@ -11,7 +11,7 @@ const Navbar = () => {
       {/* Logo */}
       <div className="flex-1">
         <Link
-          to="/"
+          to="/home"
           className="btn btn-ghost hover:bg-transparent normal-case text-xl gap-3 px-0"
         >
           <div className="p-2 bg-slate-800/50 rounded-lg border border-slate-700/50">
@@ -38,7 +38,9 @@ const Navbar = () => {
               className="btn btn-ghost text-slate-400 hover:text-white hover:bg-slate-800 gap-2"
             >
               <User size={20} />
-              <span className="hidden sm:inline font-normal">Profile</span>
+              <span className="hidden sm:inline font-normal">
+                Profile
+              </span>
             </Link>
 
             <button
