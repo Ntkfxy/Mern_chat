@@ -34,29 +34,33 @@ const ProfilePage = () => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
 
-    reader.onloadend = () => {
-      setFormData((prev) => ({
-        ...prev,
+    reader.onloadend = async () => {
+      const newData = {
+        ...formData,
         profilePic: reader.result,
-      }));
+      };
+
+      setFormData(newData);
+
+      await updateProfile(newData);
+
+      toast.success("Profile updated");
     };
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
+  const handleBlurSave = async () => {
+    if (formData.fullName === authUser.fullName) return;
     try {
       const updatedUser = await updateProfile(formData);
 
-      toast.success("Profile updated successfully");
+      toast.success("Profile updated");
 
-      // sync รูปใหม่จาก backend (สำคัญ)
       setFormData({
         fullName: updatedUser.fullName,
         profilePic: updatedUser.profilePic,
       });
     } catch (error) {
-      toast.error(error || "Failed to update profile");
+      toast.error("Failed to update profile");
     }
   };
 
@@ -105,7 +109,7 @@ const ProfilePage = () => {
         </div>
 
         {/* FORM */}
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form className="space-y-5">
           <div>
             <label className="flex items-center gap-2 text-sm font-medium mb-2 text-black">
               <User size={16} /> Full Name
@@ -114,6 +118,7 @@ const ProfilePage = () => {
               type="text"
               value={formData.fullName}
               onChange={handleChange}
+              onBlur={handleBlurSave}
               className="w-full border rounded-xl px-4 py-3 text-sm text-black"
             />
           </div>
@@ -129,14 +134,6 @@ const ProfilePage = () => {
               className="w-full border rounded-xl px-4 py-3 text-sm bg-gray-100 text-black"
             />
           </div>
-
-          <button
-            type="submit"
-            disabled={isUpdatingProfile}
-            className="w-full bg-black text-white py-3 rounded-xl disabled:opacity-50"
-          >
-            {isUpdatingProfile ? "Updating..." : "Update Profile"}
-          </button>
         </form>
 
         {/* ACCOUNT INFO */}

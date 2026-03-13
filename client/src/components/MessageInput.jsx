@@ -15,6 +15,7 @@ const MessageInput = () => {
     THEMES.find((t) => t.name === theme)?.colors[0] || "#ff865b";
 
   const handleImageChange = (e) => {
+    //ล็อคทีละรูป
     const file = e.target.files[0];
     if (!file) return;
 

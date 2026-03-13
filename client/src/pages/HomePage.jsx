@@ -1,9 +1,9 @@
 import React from "react";
-import { MessageSquare } from "lucide-react"; // เอา Users ออกเพราะไม่ได้ใช้แล้ว
+import { MessageSquare } from "lucide-react";
 import Sidebar from "../components/Sidebar";
-import ChatContainer from "../components/ChatContainer"; // นำเข้า ChatContainer
-import MessageInput from "../components/MessageInput";   // นำเข้า MessageInput
-import { useChatStore } from "../store/useChatStore";    // นำเข้า Store เพื่อดึง State
+import ChatContainer from "../components/ChatContainer";
+import MessageInput from "../components/MessageInput";
+import { useChatStore } from "../store/useChatStore";
 
 const HomePage = () => {
   // ดึง selectedUser มาเช็คว่าตอนนี้ผู้ใช้กดเลือกใครหรือยัง
@@ -11,13 +11,11 @@ const HomePage = () => {
 
   return (
     <div className="flex h-[calc(100vh-64px)] bg-transparent text-slate-300 overflow-hidden">
-      
       {/* ซ้ายมือ: แถบรายชื่อเพื่อน (แสดงเสมอ) */}
       <Sidebar />
 
       {/* ขวามือ: พื้นที่แชทหลัก */}
       <div className="flex-1 flex flex-col bg-transparent relative w-full h-full">
-        
         {/* เช็คเงื่อนไข: ถ้ายังไม่ได้เลือกใคร (!selectedUser) ให้โชว์หน้า Welcome */}
         {!selectedUser ? (
           <div className="flex-1 flex flex-col items-center justify-center">
@@ -43,7 +41,6 @@ const HomePage = () => {
             <MessageInput />
           </div>
         )}
-
       </div>
     </div>
   );

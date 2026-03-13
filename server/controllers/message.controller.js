@@ -29,38 +29,38 @@ const sendMessage = async (req, res) => {
 
     const senderId = req.user._id;
     const { text, file } = req.body;
-    
+
     // if(text === "" && file ==="" ){
     //     return res.status(400).json({message: "Message is empty"});
     // }
-    
+
     let fileUrl = "";
     if (file) {
       const uploadResponse = await cloudinary.uploader.upload(file);
       fileUrl = uploadResponse.secure_url;
     }
-    
+
     const newMessage = new Message({
       senderId,
       recipientId,
       text,
       file: fileUrl,
     });
-    
+
     // 1. บันทึกข้อความลงฐานข้อมูล
     await newMessage.save();
 
-    // ==========================================
-    // 2. ส่วนเสริมสำหรับ Socket.io (Real-time)
-    // ==========================================
+    //realtime chat
     // เช็คว่าผู้รับ (เพื่อนที่เราส่งหา) ออนไลน์อยู่หรือไม่
+    //ส่ง Id ผู้รับ
     const receiverSocketId = getRecipientSocketId(recipientId);
 
     if (receiverSocketId) {
       // ถ้าออนไลน์ ให้ส่ง event "newMessage" ตรงไปที่หน้าจอของเขาเลย
+      //to  คือเหมือนโทรคุย
+      //emit  คือกระจายการส่งออก
       io.to(receiverSocketId).emit("newMessage", newMessage);
     }
-    // ==========================================
 
     res.json(newMessage);
   } catch (error) {

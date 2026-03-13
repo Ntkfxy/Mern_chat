@@ -13,19 +13,21 @@ const ChatContainer = () => {
     subscribeToMessages,
     unsubscribeFromMessages,
   } = useChatStore();
-const messageEndRef = useRef(null);
+  const messageEndRef = useRef(null);
   const { authUser } = useAuthStore();
- const { theme } = useThemeStore();
+  const { theme } = useThemeStore();
 
-const currentTheme = THEMES.find((t) => t.name === theme);
+  const currentTheme = THEMES.find((t) => t.name === theme);
 
-const primaryColor = currentTheme?.colors[0];
-const bgColor = currentTheme?.colors[3];
+  const primaryColor = currentTheme?.colors[0];
+  const bgColor = currentTheme?.colors[3];
 
-  // โหลด message + socket realtime
+  // get chat Message
   useEffect(() => {
     if (selectedUser?._id) {
+      //condole.log(selectedUser)
       getMessage(selectedUser._id);
+      //Listen to socket
       subscribeToMessages();
     }
 
@@ -33,7 +35,9 @@ const bgColor = currentTheme?.colors[3];
   }, [selectedUser?._id]);
 
   useEffect(() => {
-    messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (messageEndRef.current && messages) {
+      messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
   }, [messages]);
 
   if (isMessageLoading) {
@@ -45,10 +49,7 @@ const bgColor = currentTheme?.colors[3];
   }
 
   return (
-    <div
-  className="flex-1 overflow-y-auto p-4 space-y-6 relative transition-colors duration-300"
->
-
+    <div className="flex-1 overflow-y-auto p-4 space-y-6 relative transition-colors duration-300">
       {/* HEADER */}
       <div className="sticky top-0 z-10 flex items-center gap-3 px-4 py-3  dark:bg-slate-900/80 backdrop-blur border-b border-slate-200 dark:border-slate-800">
         <div className="w-9 h-9 md:w-10 md:h-10 rounded-full overflow-hidden bg-[#1e2632]">
@@ -63,9 +64,7 @@ const bgColor = currentTheme?.colors[3];
           <h3 className="font-medium text-sm md:text-base text-white truncate">
             {selectedUser?.fullName}
           </h3>
-          <p className="text-[11px] md:text-xs text-slate-500">
-            Ready to chat
-          </p>
+          <p className="text-[11px] md:text-xs text-slate-500">Ready to chat</p>
         </div>
       </div>
 
@@ -77,9 +76,7 @@ const bgColor = currentTheme?.colors[3];
           return (
             <div
               key={message._id}
-              className={`flex ${
-                isMe ? "justify-end" : "justify-start"
-              }`}
+              className={`flex ${isMe ? "justify-end" : "justify-start"}`}
             >
               <div
                 className={`flex gap-2 md:gap-3 max-w-[85%] sm:max-w-[75%] md:max-w-[65%] ${
@@ -116,31 +113,26 @@ const bgColor = currentTheme?.colors[3];
 
                   {/* Text */}
                   {message.text && (
-  <div
-    className={`px-3 py-2 md:px-4 md:py-2.5 rounded-2xl text-sm ${
-      isMe
-        ? "text-white rounded-tr-none"
-        : " text-white border border-slate-700 rounded-tl-none"
-    }`}
+                    <div
+                      className={`px-3 py-2 md:px-4 md:py-2.5 rounded-2xl text-sm ${
+                        isMe
+                          ? "text-white rounded-tr-none"
+                          : " text-white border border-slate-700 rounded-tl-none"
+                      }`}
                       style={{
-  backgroundColor: isMe ? primaryColor : "#1e2632"
-}}
+                        backgroundColor: isMe ? primaryColor : "#1e2632",
+                      }}
                     >
-                      <p className="whitespace-pre-wrap">
-                        {message.text}
-                      </p>
+                      <p className="whitespace-pre-wrap">{message.text}</p>
                     </div>
                   )}
 
                   {/* Time */}
                   <span className="text-[10px] text-slate-400 mt-1">
-                    {new Date(message.createdAt).toLocaleTimeString(
-                      [],
-                      {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      }
-                    )}
+                    {new Date(message.createdAt).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
                   </span>
                 </div>
               </div>
